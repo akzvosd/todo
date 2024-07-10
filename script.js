@@ -4,7 +4,7 @@ const clearTasksButton = document.getElementById("clearTasksButton");
 const taskList = document.getElementById("taskList");
 const completedTaskList = document.getElementById("completedTaskList");
 
-// Массив с названиями задач для подсказок
+// Array with task names for hints
 const placeholderHints = [
   "Приготовить яичницу",
   "Постирать вещи",
@@ -17,7 +17,7 @@ const placeholderHints = [
 window.addEventListener("load", () => {
   const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
   savedTasks.forEach(task => {
-    createTask(task.text, task.done);
+    createTask(task.text, task.done, true);
   });
 });
 
@@ -32,7 +32,7 @@ taskInput.addEventListener("keypress", (event) => {
 });
 
 clearTasksButton.addEventListener("click", () => {
-  clearTasks();
+  clearCompletedTasks();
 });
 
 function getRandomPlaceholder() {
@@ -48,10 +48,13 @@ function addTask() {
   }
 }
 
-function createTask(text, done) {
+function createTask(text, done, isLoading = false) {
   const taskElement = document.createElement("div");
   taskElement.classList.add("task", "fade-in");
-  taskElement.textContent = text;
+
+  const taskText = document.createElement("span");
+  taskText.textContent = text;
+  taskElement.appendChild(taskText);
 
   if (done) {
     taskElement.classList.add("done");
@@ -74,7 +77,7 @@ function createTask(text, done) {
   });
 
   taskElement.addEventListener("dragstart", (event) => {
-    event.dataTransfer.setData("text/plain", taskElement.textContent);
+    event.dataTransfer.setData("text/plain", taskText.textContent);
     taskElement.classList.add("dragging");
   });
 
@@ -123,27 +126,29 @@ function getDragAfterElement(container, y) {
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Tab") {
-    clearTasks();
+    clearCompletedTasks();
   }
 });
 
-function clearTasks() {
-  taskList.innerHTML = "";
-  completedTaskList.innerHTML = "";
+function clearCompletedTasks() {
+  const doneTasks = completedTaskList.querySelectorAll(".task.done");
+  doneTasks.forEach(task => task.remove());
   saveTasks();
 }
 
 function saveTasks() {
   const tasksToSave = Array.from(taskList.querySelectorAll(".task"), taskElement => {
+    const taskText = taskElement.querySelector("span").textContent;
     return {
-      text: taskElement.textContent,
+      text: taskText,
       done: taskElement.classList.contains("done")
     };
   });
 
   const completedTasksToSave = Array.from(completedTaskList.querySelectorAll(".task"), taskElement => {
+    const taskText = taskElement.querySelector("span").textContent;
     return {
-      text: taskElement.textContent,
+      text: taskText,
       done: true
     };
   });
